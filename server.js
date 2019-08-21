@@ -20,6 +20,7 @@ app.get('/location', (request, response) => {
     const search = request.query.search;
     mapsAPI.getLocation(search)
         .then(location => {
+            console.log(response);
             response.json(location);
         })
 
