@@ -13,6 +13,8 @@ const PORT = process.env.PORT;
 const mapsAPI = require('./lib/geocode-api');
 
 const weatherAPI = require('./lib/weather-api');
+
+const eventsAPI = require('./lib/events-api');
 // - enable CORS
 app.use(cors());
 
@@ -39,6 +41,21 @@ app.get('/weather', (request, response) => {
     weatherAPI.getForecast(latitude, longitude)
         .then(forecast => {
             response.json(forecast);
+        })
+        .catch(err => {
+            response.status(500).json({
+                error: err.message || err
+            });
+        });
+});
+
+app.get('/events', (request, response) => {
+    const latitude = request.query.latitude;
+    const longitude = request.query.longitude;
+
+    eventsAPI.getEvents(latitude, longitude)
+        .then(event => {
+            response.json(event);
         })
         .catch(err => {
             response.status(500).json({
