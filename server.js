@@ -10,71 +10,61 @@ const app = express();
 // - get the port on which to run the server
 const PORT = process.env.PORT;
 
-const { getLocation } = require('./lib/geocode-api');
-console.log(getLocation);
-const weatherData = require('./data/darksky.json');
+const mapsAPI = require('./lib/geocode-api');
+
+const weatherAPI = require('./lib/weather-api');
+
+const eventsAPI = require('./lib/events-api');
 // - enable CORS
 app.use(cors());
 
 app.get('/location', (request, response) => {
-    try {
-        const location = request.query.location;
-        const result = getLatLng(location);
-        response.status(200).json(result);
+    const search = request.query.search;
+    mapsAPI.getLocation(search)
+        .then(location => {
+            console.log(response);
+            response.json(location);
+        })
 
-
-    }
-
-    catch(err) {
-        // TODO: make an object and send via .json...
-        response.status(500).send('Sorry something went wrong, please try again');
-    }
+        .catch(err => {
+            response.status(500).json({
+                error: err.message || err
+            });
+        });
 
 });
 
 app.get('/weather', (request, response) => {
-    try {
-        const weather = request.query.weather;
-        const result = getForecast(weather);
-        response.status(200).json(result);
-    }
+    const latitude = request.query.latitude;
+    const longitude = request.query.longitude;
 
-    catch(err) {
-        // TODO: make an object and send via .json...
-        response.status(500).send('Sorry something went wrong, please try again');
-    }
-
+    weatherAPI.getForecast(latitude, longitude)
+        .then(forecast => {
+            response.json(forecast);
+        })
+        .catch(err => {
+            response.status(500).json({
+                error: err.message || err
+            });
+        });
 });
 
-function getForecast() {
+app.get('/events', (request, response) => {
+    const latitude = request.query.latitude;
+    const longitude = request.query.longitude;
 
-    const eightDayForecast = weatherData.daily.data.map(dailyForecast => {
-        return {
-            forecast: dailyForecast.summary,
-            time: dailyForecast.time * 1000
-        };
-    }); 
-    return eightDayForecast;
-}
+    eventsAPI.getEvents(latitude, longitude)
+        .then(event => {
+            response.json(event);
+        })
+        .catch(err => {
+            response.status(500).json({
+                error: err.message || err
+            });
+        });
+});
 
-function getLatLng() {
-    // ignore location for now, return hard-coded file
-    // api call will go here
 
-    return toLocation(geoData);
-}
-
-function toLocation() {
-    const firstResult = geoData.results[0];
-    const geometry = firstResult.geometry;
-    
-    return {
-        search_query: 'Alchemy',
-        formatted_query: firstResult.formatted_address,
-        latitude: geometry.location.lat,
-        longitude: geometry.location.lng
-    };
-}
 
 app.listen(PORT, () => {
     console.log('server running on PORT', PORT);
