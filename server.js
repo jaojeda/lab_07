@@ -10,7 +10,7 @@ const app = express();
 // - get the port on which to run the server
 const PORT = process.env.PORT;
 
-const geoData = require('./data/geo.json');
+const geoData = require('./lib/geocode-api');
 const weatherData = require('./data/darksky.json');
 // - enable CORS
 app.use(cors());
