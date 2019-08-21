@@ -12,7 +12,7 @@ const PORT = process.env.PORT;
 
 const mapsAPI = require('./lib/geocode-api');
 
-const weatherData = require('./data/darksky.json');
+const weatherAPI = require('./lib/weather-api');
 // - enable CORS
 app.use(cors());
 
@@ -33,29 +33,20 @@ app.get('/location', (request, response) => {
 });
 
 app.get('/weather', (request, response) => {
-    try {
-        const weather = request.query.weather;
-        const result = getForecast(weather);
-        response.status(200).json(result);
-    }
+    const latitude = request.query.latitude;
+    const longitude = request.query.longitude;
 
-    catch(err) {
-        // TODO: make an object and send via .json...
-        response.status(500).send('Sorry something went wrong, please try again');
-    }
-
+    weatherAPI.getForecast(latitude, longitude)
+        .then(forecast => {
+            response.json(forecast);
+        })
+        .catch(err => {
+            response.status(500).json({
+                error: err.message || err
+            });
+        });
 });
 
-function getForecast() {
-
-    const eightDayForecast = weatherData.daily.data.map(dailyForecast => {
-        return {
-            forecast: dailyForecast.summary,
-            time: dailyForecast.time * 1000
-        };
-    }); 
-    return eightDayForecast;
-}
 
 
 app.listen(PORT, () => {
